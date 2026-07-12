@@ -17,11 +17,11 @@
     .btn { background: #1a1a1a; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; width: 100%; margin-top: 10px; }
     .btn:hover { opacity: 0.9; }
     .btn-outline { background: transparent; color: #1a1a1a; border: 1.5px solid #e8e4df; }
-    input, select { width: 100%; padding: 10px 12px; border: 1.5px solid #e8e4df; border-radius: 10px; font-size: 14px; margin-bottom: 12px; font-family: inherit; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #e8e4df; border-radius: 10px; font-size: 14px; margin-bottom: 12px; font-family: inherit; }
     .label { font-size: 11px; font-weight: 700; color: #6b6560; margin-bottom: 6px; display: block; letter-spacing: 0.06em; }
-    .item { background: white; border: 1.5px solid #e8e4df; border-radius: 12px; padding: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-    .item-name { font-weight: 700; color: #1a1a1a; }
-    .item-price { font-weight: 800; color: #2d7a4f; }
+    .item { background: white; border: 1.5px solid #e8e4df; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+    .item-name { font-weight: 700; color: #1a1a1a; font-size: 16px; }
+    .item-price { font-weight: 800; color: #2d7a4f; font-size: 15px; }
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; }
     .modal.active { display: flex; align-items: flex-end; justify-content: center; }
     .modal-content { background: white; border-radius: 20px 20px 0 0; padding: 24px; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; }
@@ -43,9 +43,8 @@
     const { useState, useEffect } = React;
 
     const DEMO_ITEMS = [
-      { id: 1, name: 'Máquina de lavar louças', price: 2800, status: 'quero' },
-      { id: 2, name: 'Balança para café', price: 380, status: 'quero' },
-      { id: 3, name: 'Cafeteira de cápsula', price: 650, status: 'quero' },
+      { id: 1, name: 'Máquina de lavar louças', price: 2800, status: 'quero', category: 'Cozinha', priority: 'Planejado' },
+      { id: 2, name: 'Balança para café', price: 380, status: 'quero', category: 'Cozinha', priority: 'Assim que der' },
     ];
 
     const genCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -62,8 +61,16 @@
         return saved ? JSON.parse(saved) : DEMO_ITEMS;
       });
       const [showModal, setShowModal] = useState(false);
+      
+      // Novos estados para a Fase 1
       const [formName, setFormName] = useState('');
       const [formPrice, setFormPrice] = useState('');
+      const [formBrand, setFormBrand] = useState('');
+      const [formCategory, setFormCategory] = useState('Casa');
+      const [formPriority, setFormPriority] = useState('Planejado');
+      const [formStore, setFormStore] = useState('');
+      const [formLink, setFormLink] = useState('');
+      const [formNotes, setFormNotes] = useState('');
 
       useEffect(() => {
         localStorage.setItem('items', JSON.stringify(items));
@@ -87,10 +94,31 @@
 
       function addItem() {
         if (!formName.trim() || !formPrice) return;
-        const newItem = { id: Date.now(), name: formName, price: parseFloat(formPrice), status: 'quero' };
+        
+        const newItem = { 
+          id: Date.now(), 
+          name: formName, 
+          price: parseFloat(formPrice), 
+          status: 'quero',
+          brand: formBrand,
+          category: formCategory,
+          priority: formPriority,
+          store: formStore,
+          link: formLink,
+          notes: formNotes
+        };
+        
         setItems([...items, newItem]);
+        
+        // Limpar todos os campos
         setFormName('');
         setFormPrice('');
+        setFormBrand('');
+        setFormCategory('Casa');
+        setFormPriority('Planejado');
+        setFormStore('');
+        setFormLink('');
+        setFormNotes('');
         setShowModal(false);
       }
 
@@ -175,15 +203,46 @@
 
           <div>
             {items.map(item => (
-              <div key={item.id} className="item" style={{ opacity: item.status === 'comprado' ? 0.6 : 1, textDecoration: item.status === 'comprado' ? 'line-through' : 'none' }}>
-                <div className="item-name">{item.name}</div>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <div className="item-price">R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                  <button onClick={() => toggleStatus(item.id)} style={{ background: item.status === 'comprado' ? '#2d7a4f' : 'white', color: item.status === 'comprado' ? 'white' : '#1a1a1a', border: `2px solid ${item.status === 'comprado' ? '#2d7a4f' : '#e8e4df'}`, borderRadius: 6, width: 28, height: 28, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>
-                    {item.status === 'comprado' ? '✓' : ''}
-                  </button>
-                  <button onClick={() => deleteItem(item.id)} style={{ background: 'none', border: 'none', color: '#c0392b', cursor: 'pointer', fontSize: 16 }}>🗑️</button>
+              <div key={item.id} className="item" style={{ opacity: item.status === 'comprado' ? 0.6 : 1, transition: '0.2s' }}>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1, paddingRight: '12px' }}>
+                    <div className="item-name" style={{ textDecoration: item.status === 'comprado' ? 'line-through' : 'none' }}>
+                      {item.name}
+                    </div>
+                    
+                    {/* Exibição dos novos detalhes */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '8px', fontSize: '12px', color: '#6b6560' }}>
+                      
+                      {item.brand && <div>🏷️ <strong>Modelo:</strong> {item.brand}</div>}
+                      
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {item.category && <span style={{ background: '#f0ede6', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>{item.category}</span>}
+                        {item.priority && <span style={{ background: '#f0ede6', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>⏳ {item.priority}</span>}
+                      </div>
+
+                      {(item.store || item.link) && (
+                        <div>
+                          🛒 <strong>Onde:</strong> {item.link ? <a href={item.link} target="_blank" style={{ color: '#2d7a4f', textDecoration: 'none', fontWeight: 'bold' }}>{item.store || 'Acessar Link'} ↗</a> : item.store}
+                        </div>
+                      )}
+                      
+                      {item.notes && <div style={{ fontStyle: 'italic', background: '#f9f8f6', padding: '6px', borderRadius: '6px', marginTop: '2px' }}>"{item.notes}"</div>}
+                    </div>
+
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+                    <div className="item-price">R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => toggleStatus(item.id)} style={{ background: item.status === 'comprado' ? '#2d7a4f' : 'white', color: item.status === 'comprado' ? 'white' : '#1a1a1a', border: `2px solid ${item.status === 'comprado' ? '#2d7a4f' : '#e8e4df'}`, borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {item.status === 'comprado' ? '✓' : ''}
+                      </button>
+                      <button onClick={() => deleteItem(item.id)} style={{ background: 'none', border: 'none', color: '#c0392b', cursor: 'pointer', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🗑️</button>
+                    </div>
+                  </div>
                 </div>
+
               </div>
             ))}
           </div>
@@ -194,11 +253,47 @@
                 <h2>Novo item</h2>
                 <button className="close-btn" onClick={() => setShowModal(false)}>✕</button>
               </div>
+              
               <label className="label">NOME</label>
               <input placeholder="Ex: Cafeteira" value={formName} onChange={e => setFormName(e.target.value)} />
+              
               <label className="label">PREÇO (R$)</label>
               <input type="number" placeholder="0,00" value={formPrice} onChange={e => setFormPrice(e.target.value)} />
-              <button className="btn" onClick={addItem}>Adicionar</button>
+
+              <label className="label">MARCA / MODELO (Opcional)</label>
+              <input placeholder="Ex: Nespresso Essenza Mini" value={formBrand} onChange={e => setFormBrand(e.target.value)} />
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label className="label">CATEGORIA</label>
+                  <select value={formCategory} onChange={e => setFormCategory(e.target.value)}>
+                    <option value="Cozinha">Cozinha</option>
+                    <option value="Casa">Casa</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Móveis">Móveis</option>
+                    <option value="Outros">Outros</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">PRIORIDADE</label>
+                  <select value={formPriority} onChange={e => setFormPriority(e.target.value)}>
+                    <option value="Assim que der">Assim que der</option>
+                    <option value="Planejado">Planejado</option>
+                    <option value="Um dia">Um dia</option>
+                  </select>
+                </div>
+              </div>
+
+              <label className="label">LOJA / PESQUISA (Opcional)</label>
+              <input placeholder="Ex: Amazon" value={formStore} onChange={e => setFormStore(e.target.value)} />
+
+              <label className="label">LINK DO PRODUTO (Opcional)</label>
+              <input placeholder="https://..." type="url" value={formLink} onChange={e => setFormLink(e.target.value)} />
+
+              <label className="label">OBSERVAÇÕES (Opcional)</label>
+              <textarea placeholder="Ex: Voltagem 220v, precisa comprar cápsulas também..." value={formNotes} onChange={e => setFormNotes(e.target.value)} style={{ resize: 'vertical', minHeight: '60px' }}></textarea>
+
+              <button className="btn" onClick={addItem}>Adicionar à lista</button>
             </div>
           </div>
         </div>
