@@ -16,7 +16,7 @@
   </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">Carregando...</div>
 
   <script type="text/babel">
     const firebaseConfig = {
@@ -29,61 +29,46 @@
       measurementId: "G-FTNYDTWJWP"
     };
     
+    // Inicializa Firebase de forma global
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     function App() {
-      const [code, setCode] = React.useState(localStorage.getItem('roomCode') || '');
-      const [data, setData] = React.useState({ items: [], caixa: 0, reserva: 0 });
+      const [code] = React.useState(localStorage.getItem('roomCode') || '5EBBIK');
+      const [data, setData] = React.useState(null);
 
       React.useEffect(() => {
-        if (code) {
-          const unsub = db.collection("listas").doc(code).onSnapshot(doc => {
-            if (doc.exists) setData(doc.data());
-          });
-          return () => unsub();
-        }
+        // Escuta o banco de dados
+        const unsub = db.collection("listas").doc(code).onSnapshot(doc => {
+          if (doc.exists) {
+            setData(doc.data());
+          } else {
+            setData({ items: [], caixa: 0, reserva: 0 });
+          }
+        });
+        return () => unsub();
       }, [code]);
 
-      const addMoney = (type) => {
-        const val = prompt("Quanto adicionar?");
-        if (val) {
-          const amount = parseFloat(val);
-          const update = {};
-          update[type] = (data[type] || 0) + amount;
-          db.collection("listas").doc(code).update(update);
-        }
-      };
-
-      const addItem = () => {
-        const name = prompt("Nome do item:");
-        if (name) {
-          db.collection("listas").doc(code).update({
-            items: firebase.firestore.FieldValue.arrayUnion({ id: Date.now(), name })
-          });
-        }
-      };
+      if (!data) return <div>Carregando lista...</div>;
 
       return (
         <div className="container">
           <div className="card">
             <h2>Lista: {code}</h2>
-            <p><strong>Caixa:</strong> R$ {data.caixa?.toFixed(2)}</p>
-            <p><strong>Reserva:</strong> R$ {data.reserva?.toFixed(2)}</p>
-            <button className="btn" onClick={() => addMoney('caixa')}>+ Adicionar ao Caixa</button>
-            <button className="btn" style={{background: '#2d7a4f'}} onClick={() => addMoney('reserva')}>+ Adicionar à Reserva</button>
+            <p><strong>Caixa:</strong> R$ {data.caixa ? data.caixa.toFixed(2) : "0.00"}</p>
+            <p><strong>Reserva:</strong> R$ {data.reserva ? data.reserva.toFixed(2) : "0.00"}</p>
           </div>
-          
-          <button className="btn" style={{background: '#555'}} onClick={addItem}>+ Novo Item</button>
-          
-          {data.items.map((i) => (
-            <div key={i.id} className="card">{i.name}</div>
+          {data.items.map((i, idx) => (
+            <div key={idx} className="card">{i.name}</div>
           ))}
         </div>
       );
     }
 
-    ReactDOM.render(<App />, document.getElementById('root'));
+    // Renderiza apenas quando o DOM estiver pronto
+    window.addEventListener('DOMContentLoaded', () => {
+      ReactDOM.render(<App />, document.getElementById('root'));
+    });
   </script>
 </body>
 </html>
