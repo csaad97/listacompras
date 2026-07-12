@@ -19,9 +19,9 @@
     .btn-outline { background: transparent; color: #1a1a1a; border: 1.5px solid #e8e4df; }
     input, select, textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #e8e4df; border-radius: 10px; font-size: 14px; margin-bottom: 12px; font-family: inherit; }
     .label { font-size: 11px; font-weight: 700; color: #6b6560; margin-bottom: 6px; display: block; letter-spacing: 0.06em; }
-    .item { background: white; border: 1.5px solid #e8e4df; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+    .item { background: white; border: 1.5px solid #e8e4df; border-radius: 12px; padding: 14px; margin-bottom: 10px; transition: 0.2s; }
     .item-name { font-weight: 700; color: #1a1a1a; font-size: 16px; }
-    .item-price { font-weight: 800; color: #2d7a4f; font-size: 15px; }
+    .item-price { font-weight: 800; color: #2d7a4f; font-size: 15px; display: flex; align-items: center; gap: 6px; }
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; }
     .modal.active { display: flex; align-items: flex-end; justify-content: center; }
     .modal-content { background: white; border-radius: 20px 20px 0 0; padding: 24px; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; }
@@ -34,6 +34,12 @@
     .setup-card p { font-size: 13px; color: #6b6560; margin-bottom: 28px; }
     .setup-card .btn { margin-top: 10px; }
     .back-btn { background: none; border: none; color: #6b6560; cursor: pointer; font-size: 13px; margin-bottom: 16px; }
+    
+    .status-select { padding: 4px 8px; border-radius: 6px; border: 1.5px solid #e8e4df; font-size: 12px; font-weight: 700; cursor: pointer; outline: none; background: white; }
+    .status-quero { border-color: #cbd5e1; color: #475569; }
+    .status-pesquisando { border-color: #fde047; color: #ca8a04; }
+    .status-aguardando { border-color: #93c5fd; color: #2563eb; }
+    .status-comprado { border-color: #2d7a4f; color: #2d7a4f; background: #eefdf4; }
   </style>
 </head>
 <body>
@@ -43,8 +49,8 @@
     const { useState, useEffect } = React;
 
     const DEMO_ITEMS = [
-      { id: 1, name: 'Máquina de lavar louças', price: 2800, status: 'quero', category: 'Cozinha', priority: 'Planejado' },
-      { id: 2, name: 'Balança para café', price: 380, status: 'quero', category: 'Cozinha', priority: 'Assim que der' },
+      { id: 1, name: 'Máquina de lavar louças', price: 2800, status: 'Quero', category: 'Cozinha', priority: 'Planejado' },
+      { id: 2, name: 'Balança para café', price: 380, status: 'Quero', category: 'Cozinha', priority: 'Assim que der' },
     ];
 
     const genCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -62,7 +68,6 @@
       });
       const [showModal, setShowModal] = useState(false);
       
-      // Novos estados para a Fase 1
       const [formName, setFormName] = useState('');
       const [formPrice, setFormPrice] = useState('');
       const [formBrand, setFormBrand] = useState('');
@@ -99,7 +104,7 @@
           id: Date.now(), 
           name: formName, 
           price: parseFloat(formPrice), 
-          status: 'quero',
+          status: 'Quero',
           brand: formBrand,
           category: formCategory,
           priority: formPriority,
@@ -110,24 +115,26 @@
         
         setItems([...items, newItem]);
         
-        // Limpar todos os campos
-        setFormName('');
-        setFormPrice('');
-        setFormBrand('');
-        setFormCategory('Casa');
-        setFormPriority('Planejado');
-        setFormStore('');
-        setFormLink('');
-        setFormNotes('');
+        setFormName(''); setFormPrice(''); setFormBrand(''); setFormCategory('Casa');
+        setFormPriority('Planejado'); setFormStore(''); setFormLink(''); setFormNotes('');
         setShowModal(false);
       }
 
       function deleteItem(id) {
-        setItems(items.filter(i => i.id !== id));
+        if(window.confirm('Tem certeza que deseja apagar este item?')) {
+          setItems(items.filter(i => i.id !== id));
+        }
       }
 
-      function toggleStatus(id) {
-        setItems(items.map(i => i.id === id ? { ...i, status: i.status === 'quero' ? 'comprado' : 'quero' } : i));
+      function changeStatus(id, newStatus) {
+        setItems(items.map(i => i.id === id ? { ...i, status: newStatus } : i));
+      }
+
+      function updatePrice(id, currentName) {
+        const newPrice = window.prompt(`Novo preço para ${currentName} (apenas números e ponto, ex: 1500.50):`);
+        if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
+          setItems(items.map(i => i.id === id ? { ...i, price: parseFloat(newPrice) } : i));
+        }
       }
 
       function leaveRoom() {
@@ -135,10 +142,11 @@
         window.location.reload();
       }
 
-      const total = items.reduce((s, i) => s + i.price, 0);
-      const bought = items.filter(i => i.status === 'comprado');
+      const totalPlanejado = items.reduce((s, i) => s + i.price, 0);
+      const boughtItems = items.filter(i => i.status === 'Comprado');
+      const totalGasto = boughtItems.reduce((s, i) => s + i.price, 0);
 
-      if (setupStep === 'choose') {
+      if (setupStep === 'choose') { /* Código da tela de início oculto para brevidade na leitura, mantém igual */
         return (
           <div className="setup">
             <div className="setup-card">
@@ -187,57 +195,77 @@
           <div className="header">
             <h1>Lista de compras</h1>
             <p>👤 {myName} · Código: <strong style={{ fontFamily: 'monospace' }}>{roomCode}</strong></p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16, fontSize: 13 }}>
+            
+            {/* NOVO SIMULADOR FINANCEIRO */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 16, fontSize: 13 }}>
               <div style={{ background: '#f7f5f0', padding: 12, borderRadius: 8, textAlign: 'center' }}>
-                <div style={{ fontWeight: 800, fontSize: 16, color: '#1a1a1a' }}>R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                <div style={{ color: '#6b6560', marginTop: 4 }}>Total</div>
+                <div style={{ fontWeight: 800, fontSize: 15, color: '#1a1a1a' }}>R$ {totalPlanejado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                <div style={{ color: '#6b6560', marginTop: 4, fontSize: 11 }}>Planejado</div>
               </div>
               <div style={{ background: '#f7f5f0', padding: 12, borderRadius: 8, textAlign: 'center' }}>
-                <div style={{ fontWeight: 800, fontSize: 16, color: '#2d7a4f' }}>{bought.length}/{items.length}</div>
-                <div style={{ color: '#6b6560', marginTop: 4 }}>Comprados</div>
+                <div style={{ fontWeight: 800, fontSize: 15, color: '#c0392b' }}>R$ {totalGasto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                <div style={{ color: '#6b6560', marginTop: 4, fontSize: 11 }}>Já Gasto</div>
+              </div>
+              <div style={{ background: '#f7f5f0', padding: 12, borderRadius: 8, textAlign: 'center' }}>
+                <div style={{ fontWeight: 800, fontSize: 15, color: '#2d7a4f' }}>{boughtItems.length} / {items.length}</div>
+                <div style={{ color: '#6b6560', marginTop: 4, fontSize: 11 }}>Comprados</div>
               </div>
             </div>
+
             <button className="btn" onClick={() => setShowModal(true)}>+ Adicionar item</button>
             <button className="btn btn-outline" onClick={leaveRoom}>Sair desta lista</button>
           </div>
 
           <div>
             {items.map(item => (
-              <div key={item.id} className="item" style={{ opacity: item.status === 'comprado' ? 0.6 : 1, transition: '0.2s' }}>
+              <div key={item.id} className="item" style={{ opacity: item.status === 'Comprado' ? 0.6 : 1 }}>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, paddingRight: '12px' }}>
-                    <div className="item-name" style={{ textDecoration: item.status === 'comprado' ? 'line-through' : 'none' }}>
+                    <div className="item-name" style={{ textDecoration: item.status === 'Comprado' ? 'line-through' : 'none' }}>
                       {item.name}
                     </div>
                     
-                    {/* Exibição dos novos detalhes */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '8px', fontSize: '12px', color: '#6b6560' }}>
-                      
                       {item.brand && <div>🏷️ <strong>Modelo:</strong> {item.brand}</div>}
                       
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        
+                        {/* NOVO SELETOR DE STATUS */}
+                        <select 
+                          className={`status-select status-${item.status.toLowerCase()}`}
+                          value={item.status} 
+                          onChange={(e) => changeStatus(item.id, e.target.value)}
+                        >
+                          <option value="Quero">Quero</option>
+                          <option value="Pesquisando">Pesquisando</option>
+                          <option value="Aguardando">Aguardando entrega</option>
+                          <option value="Comprado">Comprado</option>
+                        </select>
+
                         {item.category && <span style={{ background: '#f0ede6', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>{item.category}</span>}
                         {item.priority && <span style={{ background: '#f0ede6', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>⏳ {item.priority}</span>}
                       </div>
 
                       {(item.store || item.link) && (
-                        <div>
+                        <div style={{ marginTop: '4px' }}>
                           🛒 <strong>Onde:</strong> {item.link ? <a href={item.link} target="_blank" style={{ color: '#2d7a4f', textDecoration: 'none', fontWeight: 'bold' }}>{item.store || 'Acessar Link'} ↗</a> : item.store}
                         </div>
                       )}
                       
-                      {item.notes && <div style={{ fontStyle: 'italic', background: '#f9f8f6', padding: '6px', borderRadius: '6px', marginTop: '2px' }}>"{item.notes}"</div>}
+                      {item.notes && <div style={{ fontStyle: 'italic', background: '#f9f8f6', padding: '6px', borderRadius: '6px', marginTop: '4px' }}>"{item.notes}"</div>}
                     </div>
-
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
-                    <div className="item-price">R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                    
+                    {/* NOVO BOTÃO DE ATUALIZAR PREÇO */}
+                    <div className="item-price">
+                      R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      <button onClick={() => updatePrice(item.id, item.name)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: 0.5 }}>✏️</button>
+                    </div>
+
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => toggleStatus(item.id)} style={{ background: item.status === 'comprado' ? '#2d7a4f' : 'white', color: item.status === 'comprado' ? 'white' : '#1a1a1a', border: `2px solid ${item.status === 'comprado' ? '#2d7a4f' : '#e8e4df'}`, borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {item.status === 'comprado' ? '✓' : ''}
-                      </button>
                       <button onClick={() => deleteItem(item.id)} style={{ background: 'none', border: 'none', color: '#c0392b', cursor: 'pointer', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🗑️</button>
                     </div>
                   </div>
@@ -254,10 +282,11 @@
                 <button className="close-btn" onClick={() => setShowModal(false)}>✕</button>
               </div>
               
+              {/* O Formulário da Fase 1 continua aqui intacto */}
               <label className="label">NOME</label>
               <input placeholder="Ex: Cafeteira" value={formName} onChange={e => setFormName(e.target.value)} />
               
-              <label className="label">PREÇO (R$)</label>
+              <label className="label">PREÇO ESTIMADO (R$)</label>
               <input type="number" placeholder="0,00" value={formPrice} onChange={e => setFormPrice(e.target.value)} />
 
               <label className="label">MARCA / MODELO (Opcional)</label>
@@ -291,7 +320,7 @@
               <input placeholder="https://..." type="url" value={formLink} onChange={e => setFormLink(e.target.value)} />
 
               <label className="label">OBSERVAÇÕES (Opcional)</label>
-              <textarea placeholder="Ex: Voltagem 220v, precisa comprar cápsulas também..." value={formNotes} onChange={e => setFormNotes(e.target.value)} style={{ resize: 'vertical', minHeight: '60px' }}></textarea>
+              <textarea placeholder="Ex: Voltagem 220v..." value={formNotes} onChange={e => setFormNotes(e.target.value)} style={{ resize: 'vertical', minHeight: '60px' }}></textarea>
 
               <button className="btn" onClick={addItem}>Adicionar à lista</button>
             </div>
