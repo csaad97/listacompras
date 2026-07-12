@@ -6,12 +6,13 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <style>
-    body { font-family: sans-serif; background: #f7f5f0; padding: 20px; }
-    .container { max-width: 600px; margin: 0 auto; text-align: center; }
+    body { font-family: -apple-system, sans-serif; background: #f7f5f0; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e8e4df; }
+    button { background: #1a1a1a; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -31,10 +32,10 @@
     const db = firebase.firestore();
 
     function App() {
-      const [code, setCode] = useState(localStorage.getItem('roomCode') || '');
-      const [data, setData] = useState({ items: [] });
+      const [code, setCode] = React.useState(localStorage.getItem('roomCode') || '');
+      const [data, setData] = React.useState({ items: [], caixa: 0, reserva: 0 });
 
-      useEffect(() => {
+      React.useEffect(() => {
         if (code) {
           return db.collection("listas").doc(code).onSnapshot(doc => {
             if (doc.exists) setData(doc.data());
@@ -44,23 +45,21 @@
 
       const create = () => {
         const newCode = Math.random().toString(36).slice(2,8).toUpperCase();
-        db.collection("listas").doc(newCode).set({ items: [] });
+        db.collection("listas").doc(newCode).set({ items: [], caixa: 0, reserva: 0 });
         localStorage.setItem('roomCode', newCode);
         setCode(newCode);
       };
 
-      if (!code) return <button onClick={create}>Criar Lista na Nuvem</button>;
+      if (!code) return <div className="container"><button onClick={create}>Criar Lista Sincronizada</button></div>;
 
       return (
         <div className="container">
-          <h1>Lista: {code}</h1>
-          <button onClick={() => {
-            const newItem = { id: Date.now(), name: "Teste Sync" };
-            db.collection("listas").doc(code).update({
-              items: firebase.firestore.FieldValue.arrayUnion(newItem)
-            });
-          }}>Adicionar Item de Teste</button>
-          {data.items.map(i => <p key={i.id}>{i.name}</p>)}
+          <div className="card">
+            <h2>Lista: {code}</h2>
+            <p><strong>Caixa:</strong> R$ {data.caixa?.toFixed(2)} | <strong>Reserva:</strong> R$ {data.reserva?.toFixed(2)}</p>
+            <button onClick={() => db.collection("listas").doc(code).update({ caixa: data.caixa + 100 })}>Adicionar R$ 100 ao Caixa</button>
+          </div>
+          {data.items.map(i => <div key={i.id} className="card">{i.name} - R$ {i.price}</div>)}
         </div>
       );
     }
