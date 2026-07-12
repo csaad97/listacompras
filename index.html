@@ -1,11 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
+  <meta charset="UTF-8">
+  <title>Lista de Compras Sync</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #f7f5f0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e8e4df; }
+    .btn { background: #1a1a1a; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+  </style>
 </head>
 <body>
   <div id="root"></div>
@@ -20,24 +28,37 @@
       measurementId: "G-FTNYDTWJWP"
     };
     
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     function App() {
-      const [status, setStatus] = React.useState("Conectando...");
-      
+      const [data, setData] = React.useState({ items: [], caixa: 0, reserva: 0 });
+
       React.useEffect(() => {
-        db.collection("listas").doc("5EBBIK").get()
-          .then((doc) => {
-            if (doc.exists) setStatus("Conectado e lendo dados!");
-            else setStatus("Conectado, mas o documento não existe.");
-          })
-          .catch((err) => setStatus("Erro: " + err.message));
+        // Usamos o seu código fixo "5EBBIK" para sincronizar
+        return db.collection("listas").doc("5EBBIK").onSnapshot(doc => {
+          if (doc.exists) setData(doc.data());
+        });
       }, []);
 
-      return <h1>{status}</h1>;
-    }
+      const updateData = (newData) => {
+        db.collection("listas").doc("5EBBIK").update(newData);
+      };
 
+      return (
+        <div className="container">
+          <div className="card">
+            <h2>Lista: 5EBBIK</h2>
+            <p>Caixa: R$ {data.caixa?.toFixed(2)} | Reserva: R$ {data.reserva?.toFixed(2)}</p>
+            <button className="btn" onClick={() => updateData({ caixa: (data.caixa || 0) + 100 })}>+ R$ 100 Caixa</button>
+          </div>
+          
+          {data.items.map((i, idx) => (
+            <div key={idx} className="card">{i.name} - R$ {i.price}</div>
+          ))}
+        </div>
+      );
+    }
     ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
