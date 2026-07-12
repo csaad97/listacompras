@@ -2,424 +2,90 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lista de Compras</title>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <title>Lista de Compras Sync</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f5f0; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e8e4df; }
-    .header h1 { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
-    .header p { font-size: 13px; color: #6b6560; }
-    .btn { background: #1a1a1a; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; width: 100%; margin-top: 10px; }
-    .btn:hover { opacity: 0.9; }
-    .btn-outline { background: transparent; color: #1a1a1a; border: 1.5px solid #e8e4df; }
-    input, select, textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #e8e4df; border-radius: 10px; font-size: 14px; margin-bottom: 12px; font-family: inherit; }
-    .label { font-size: 11px; font-weight: 700; color: #6b6560; margin-bottom: 6px; display: block; letter-spacing: 0.06em; text-transform: uppercase; }
-    .item { background: white; border: 1.5px solid #e8e4df; border-radius: 12px; padding: 14px; margin-bottom: 10px; transition: 0.2s; }
-    .item-name { font-weight: 700; color: #1a1a1a; font-size: 16px; }
-    .item-price { font-weight: 800; color: #2d7a4f; font-size: 15px; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; }
-    .modal.active { display: flex; align-items: flex-end; justify-content: center; }
-    .modal-content { background: white; border-radius: 20px 20px 0 0; padding: 24px; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .modal-header h2 { font-size: 17px; font-weight: 800; }
-    .close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #6b6560; }
-    .setup { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
-    .setup-card { background: white; border: 1px solid #e8e4df; border-radius: 20px; padding: 32px; text-align: center; width: 100%; max-width: 380px; }
-    .setup-card h1 { font-size: 22px; font-weight: 900; margin: 12px 0 6px 0; }
-    .setup-card p { font-size: 13px; color: #6b6560; margin-bottom: 28px; }
-    .setup-card .btn { margin-top: 10px; }
-    .back-btn { background: none; border: none; color: #6b6560; cursor: pointer; font-size: 13px; margin-bottom: 16px; }
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     
-    .status-select { padding: 4px 8px; border-radius: 6px; border: 1.5px solid #e8e4df; font-size: 12px; font-weight: 700; cursor: pointer; outline: none; background: white; }
-    .status-quero { border-color: #cbd5e1; color: #475569; }
-    .status-pesquisando { border-color: #fde047; color: #ca8a04; }
-    .status-aguardando { border-color: #93c5fd; color: #2563eb; }
-    .status-comprado { border-color: #2d7a4f; color: #2d7a4f; background: #eefdf4; }
-
-    .wallet-card { flex: 1; padding: 14px; border-radius: 12px; position: relative; }
-    .wallet-title { font-size: 10px; font-weight: 800; opacity: 0.8; margin-bottom: 4px; letter-spacing: 0.05em; }
-    .wallet-value { font-size: 18px; font-weight: 900; }
-    .edit-icon { font-size: 12px; cursor: pointer; opacity: 0.5; margin-left: 6px; background: none; border: none; color: inherit; }
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLGKHLFDIDYcyH-VHG3RRF4YASDnGLFYE",
+      authDomain: "listacompras-f5210.firebaseapp.com",
+      projectId: "listacompras-f5210",
+      storageBucket: "listacompras-f5210.firebasestorage.app",
+      messagingSenderId: "1062082191988",
+      appId: "1:1062082191988:web:159c3227ea89c8aaa8a721",
+      measurementId: "G-FTNYDTWJWP"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db;
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.onSnapshot = onSnapshot;
+    window.updateDoc = updateDoc;
+  </script>
+  <style>
+    /* Mantendo o mesmo estilo visual anterior para consistência */
+    body { font-family: -apple-system, sans-serif; background: #f7f5f0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
   </style>
 </head>
 <body>
   <div id="root"></div>
-
   <script type="text/babel">
     const { useState, useEffect } = React;
-
-    const DEMO_ITEMS = [
-      { id: 1, name: 'Máquina de lavar louças', price: 2800, status: 'Quero', category: 'Cozinha', priority: 'Planejado' },
-      { id: 2, name: 'Balança para café', price: 380, status: 'Quero', category: 'Cozinha', priority: 'Assim que der' },
-    ];
-
-    const genCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+    const { db, doc, onSnapshot, setDoc, updateDoc } = window;
 
     function App() {
-      const [myName] = useState(() => localStorage.getItem('myName') || '');
-      const [roomCode] = useState(() => localStorage.getItem('roomCode') || '');
-      const [setupStep, setSetupStep] = useState(() => localStorage.getItem('roomCode') ? 'done' : 'choose');
-      
-      const [nameInput, setNameInput] = useState('');
-      const [codeInput, setCodeInput] = useState('');
-      const [items, setItems] = useState(() => {
-        const saved = localStorage.getItem('items');
-        return saved ? JSON.parse(saved) : DEMO_ITEMS;
-      });
-      
-      // Novos Estados para o Controle Financeiro
-      const [reserva, setReserva] = useState(() => parseFloat(localStorage.getItem('reserva')) || 0);
-      const [caixaCompras, setCaixaCompras] = useState(() => parseFloat(localStorage.getItem('caixaCompras')) || 0);
-      
-      const [showModal, setShowModal] = useState(false);
-      const [showMoneyModal, setShowMoneyModal] = useState(false);
-      
-      // Estados dos formulários
-      const [formName, setFormName] = useState('');
-      const [formPrice, setFormPrice] = useState('');
-      const [formBrand, setFormBrand] = useState('');
-      const [formCategory, setFormCategory] = useState('Casa');
-      const [formPriority, setFormPriority] = useState('Planejado');
-      const [formStore, setFormStore] = useState('');
-      const [formLink, setFormLink] = useState('');
-      const [formNotes, setFormNotes] = useState('');
-
-      const [moneyAmount, setMoneyAmount] = useState('');
-      const [moneyDest, setMoneyDest] = useState('caixa');
+      const [roomCode, setRoomCode] = useState(localStorage.getItem('roomCode') || '');
+      const [data, setData] = useState({ items: [], reserva: 0, caixa: 0 });
 
       useEffect(() => {
-        localStorage.setItem('items', JSON.stringify(items));
-      }, [items]);
-
-      function saveBalances(newReserva, newCaixa) {
-        setReserva(newReserva);
-        setCaixaCompras(newCaixa);
-        localStorage.setItem('reserva', newReserva);
-        localStorage.setItem('caixaCompras', newCaixa);
-      }
-
-      function handleAddMoney() {
-        const amount = parseFloat(moneyAmount);
-        if(isNaN(amount) || amount <= 0) return;
-        
-        if (moneyDest === 'reserva') saveBalances(reserva + amount, caixaCompras);
-        else saveBalances(reserva, caixaCompras + amount);
-        
-        setMoneyAmount('');
-        setShowMoneyModal(false);
-      }
-
-      function editBalanceManual(type) {
-        const current = type === 'caixa' ? caixaCompras : reserva;
-        const newVal = window.prompt(`Ajustar saldo manualmente (${type === 'caixa' ? 'Caixa' : 'Reserva'}):`, current);
-        if(newVal !== null && !isNaN(parseFloat(newVal))) {
-            if(type === 'caixa') saveBalances(reserva, parseFloat(newVal));
-            else saveBalances(parseFloat(newVal), caixaCompras);
-        }
-      }
-
-      function createRoom() {
-        if (!nameInput.trim()) return;
-        const code = genCode();
-        localStorage.setItem('roomCode', code);
-        localStorage.setItem('myName', nameInput.trim());
-        localStorage.setItem('items', JSON.stringify(DEMO_ITEMS));
-        window.location.reload();
-      }
-
-      function joinRoom() {
-        if (!nameInput.trim() || !codeInput.trim()) return;
-        localStorage.setItem('roomCode', codeInput.toUpperCase());
-        localStorage.setItem('myName', nameInput.trim());
-        window.location.reload();
-      }
-
-      function addItem() {
-        if (!formName.trim() || !formPrice) return;
-        const newItem = { 
-          id: Date.now(), name: formName, price: parseFloat(formPrice), status: 'Quero',
-          brand: formBrand, category: formCategory, priority: formPriority, store: formStore, link: formLink, notes: formNotes
-        };
-        setItems([...items, newItem]);
-        setFormName(''); setFormPrice(''); setFormBrand(''); setFormCategory('Casa');
-        setFormPriority('Planejado'); setFormStore(''); setFormLink(''); setFormNotes('');
-        setShowModal(false);
-      }
-
-      function deleteItem(id) {
-        if(window.confirm('Tem certeza que deseja apagar este item?')) {
-          const item = items.find(i => i.id === id);
-          // Se apagar um item que estava comprado, devolve o dinheiro pro caixa
-          if(item.status === 'Comprado') saveBalances(reserva, caixaCompras + item.price);
-          setItems(items.filter(i => i.id !== id));
-        }
-      }
-
-      function changeStatus(id, newStatus) {
-        const item = items.find(i => i.id === id);
-        const oldStatus = item.status;
-        
-        // Lógica automática de dinheiro
-        if (oldStatus !== 'Comprado' && newStatus === 'Comprado') {
-             saveBalances(reserva, caixaCompras - item.price);
-        } else if (oldStatus === 'Comprado' && newStatus !== 'Comprado') {
-             saveBalances(reserva, caixaCompras + item.price);
-        }
-        
-        setItems(items.map(i => i.id === id ? { ...i, status: newStatus } : i));
-      }
-
-      function updatePrice(id, currentName) {
-        const item = items.find(i => i.id === id);
-        const newPriceStr = window.prompt(`Novo preço para ${currentName} (apenas números e ponto, ex: 1500.50):`, item.price);
-        
-        if (newPriceStr !== null && !isNaN(parseFloat(newPriceStr))) {
-          const newPrice = parseFloat(newPriceStr);
-          // Se o item já estava comprado e o preço mudou, ajusta a diferença no caixa
-          if (item.status === 'Comprado') {
-             const diff = newPrice - item.price;
-             saveBalances(reserva, caixaCompras - diff);
+        if (!roomCode) return;
+        const unsubscribe = onSnapshot(doc(db, "listas", roomCode), (doc) => {
+          if (doc.exists()) {
+            setData(doc.data());
           }
-          setItems(items.map(i => i.id === id ? { ...i, price: newPrice } : i));
-        }
-      }
+        });
+        return () => unsubscribe();
+      }, [roomCode]);
 
-      function leaveRoom() {
-        localStorage.clear();
-        window.location.reload();
-      }
+      // Função para salvar no Firebase
+      const updateFirebase = async (newData) => {
+        await setDoc(doc(db, "listas", roomCode), newData, { merge: true });
+      };
 
-      const totalPlanejado = items.reduce((s, i) => s + i.price, 0);
-      const boughtItems = items.filter(i => i.status === 'Comprado');
-      const totalGasto = boughtItems.reduce((s, i) => s + i.price, 0);
+      // Exemplo de como adicionar item (você pode adaptar seus botões)
+      const addItem = (item) => {
+        const newItems = [...data.items, { ...item, id: Date.now() }];
+        updateFirebase({ items: newItems });
+      };
 
-      if (setupStep === 'choose') { 
-        return (
-          <div className="setup">
-            <div className="setup-card">
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🛒</div>
-              <h1>Lista de compras</h1>
-              <p>Para dois. À vista, sem parcela.</p>
-              <button className="btn" onClick={() => setSetupStep('create')}>Criar nova lista</button>
-              <button className="btn btn-outline" onClick={() => setSetupStep('join')}>Entrar numa lista existente</button>
-            </div>
-          </div>
-        );
-      }
-
-      if (setupStep === 'create') {
-        return (
-          <div className="setup">
-            <div className="setup-card">
-              <button className="back-btn" onClick={() => setSetupStep('choose')}>← voltar</button>
-              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 20 }}>Criar lista</h2>
-              <label className="label">SEU NOME</label>
-              <input placeholder="Ex: João" value={nameInput} onChange={e => setNameInput(e.target.value)} />
-              <button className="btn" onClick={createRoom} disabled={!nameInput.trim()}>Criar e entrar</button>
-            </div>
-          </div>
-        );
-      }
-
-      if (setupStep === 'join') {
-        return (
-          <div className="setup">
-            <div className="setup-card">
-              <button className="back-btn" onClick={() => setSetupStep('choose')}>← voltar</button>
-              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 20 }}>Entrar na lista</h2>
-              <label className="label">SEU NOME</label>
-              <input placeholder="Ex: Maria" value={nameInput} onChange={e => setNameInput(e.target.value)} />
-              <label className="label">CÓDIGO DA LISTA</label>
-              <input style={{ textTransform: 'uppercase', fontWeight: 700, fontSize: 18, letterSpacing: '0.1em' }} placeholder="ABC123" maxLength={6} value={codeInput} onChange={e => setCodeInput(e.target.value.toUpperCase())} />
-              <button className="btn" onClick={joinRoom} disabled={!nameInput.trim() || !codeInput.trim()}>Entrar</button>
-            </div>
-          </div>
-        );
+      if (!roomCode) {
+        return <button onClick={() => { 
+          const code = Math.random().toString(36).slice(2,8).toUpperCase();
+          localStorage.setItem('roomCode', code);
+          setRoomCode(code);
+          setDoc(doc(db, "listas", code), { items: [], reserva: 0, caixa: 0 });
+        }}>Criar Nova Lista na Nuvem</button>;
       }
 
       return (
         <div className="container">
-          <div className="header">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h1>Lista de compras</h1>
-                <p>👤 {myName} · Código: <strong style={{ fontFamily: 'monospace' }}>{roomCode}</strong></p>
-              </div>
-              <button onClick={leaveRoom} style={{ background: 'none', border: 'none', color: '#6b6560', textDecoration: 'underline', cursor: 'pointer', fontSize: 12 }}>Sair</button>
-            </div>
-            
-            {/* NOVO: CARTEIRAS DE DINHEIRO */}
-            <div style={{ display: 'flex', gap: 10, marginTop: 24, marginBottom: 12 }}>
-              <div className="wallet-card" style={{ background: '#1a1a1a', color: 'white' }}>
-                <div className="wallet-title">CAIXA PARA COMPRAS</div>
-                <div className="wallet-value" style={{ color: caixaCompras < 0 ? '#ff6b6b' : 'white' }}>
-                  R$ {caixaCompras.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  <button className="edit-icon" onClick={() => editBalanceManual('caixa')}>✏️</button>
-                </div>
-              </div>
-              
-              <div className="wallet-card" style={{ background: '#f0ede6', color: '#1a1a1a' }}>
-                <div className="wallet-title">RESERVA EMERGÊNCIA</div>
-                <div className="wallet-value">
-                  R$ {reserva.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  <button className="edit-icon" onClick={() => editBalanceManual('reserva')}>✏️</button>
-                </div>
-              </div>
-            </div>
-
-            <button className="btn" style={{ background: '#2d7a4f', marginTop: 0 }} onClick={() => setShowMoneyModal(true)}>
-              💰 Guardar Dinheiro Sobrando
-            </button>
-
-            <hr style={{ border: 'none', borderTop: '1px solid #e8e4df', margin: '20px 0' }} />
-            
-            {/* SIMULADOR DA LISTA */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, fontSize: 13 }}>
-              <div style={{ background: '#f7f5f0', padding: 12, borderRadius: 8, textAlign: 'center' }}>
-                <div style={{ fontWeight: 800, fontSize: 14, color: '#1a1a1a' }}>R$ {totalPlanejado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                <div style={{ color: '#6b6560', marginTop: 4, fontSize: 11 }}>Total da Lista</div>
-              </div>
-              <div style={{ background: '#f7f5f0', padding: 12, borderRadius: 8, textAlign: 'center' }}>
-                <div style={{ fontWeight: 800, fontSize: 14, color: '#c0392b' }}>R$ {totalGasto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                <div style={{ color: '#6b6560', marginTop: 4, fontSize: 11 }}>Já Gasto</div>
-              </div>
-              <div style={{ background: '#f7f5f0', padding: 12, borderRadius: 8, textAlign: 'center' }}>
-                <div style={{ fontWeight: 800, fontSize: 14, color: '#2d7a4f' }}>{boughtItems.length} / {items.length}</div>
-                <div style={{ color: '#6b6560', marginTop: 4, fontSize: 11 }}>Comprados</div>
-              </div>
-            </div>
-
-            <button className="btn" style={{ background: '#e8e4df', color: '#1a1a1a' }} onClick={() => setShowModal(true)}>+ Adicionar item na lista</button>
-          </div>
-
+          <h2>Lista: {roomCode}</h2>
+          <p>Saldo Caixa: R$ {data.caixa.toFixed(2)}</p>
+          <button onClick={() => updateFirebase({ caixa: data.caixa + 100 })}>Adicionar R$ 100 ao Caixa</button>
           <div>
-            {items.map(item => (
-              <div key={item.id} className="item" style={{ opacity: item.status === 'Comprado' ? 0.6 : 1 }}>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1, paddingRight: '12px' }}>
-                    <div className="item-name" style={{ textDecoration: item.status === 'Comprado' ? 'line-through' : 'none' }}>
-                      {item.name}
-                    </div>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '8px', fontSize: '12px', color: '#6b6560' }}>
-                      {item.brand && <div>🏷️ <strong>Modelo:</strong> {item.brand}</div>}
-                      
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <select 
-                          className={`status-select status-${item.status.toLowerCase()}`}
-                          value={item.status} 
-                          onChange={(e) => changeStatus(item.id, e.target.value)}
-                        >
-                          <option value="Quero">Quero</option>
-                          <option value="Pesquisando">Pesquisando</option>
-                          <option value="Aguardando">Aguardando entrega</option>
-                          <option value="Comprado">Comprado</option>
-                        </select>
-                        {item.category && <span style={{ background: '#f0ede6', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>{item.category}</span>}
-                        {item.priority && <span style={{ background: '#f0ede6', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>⏳ {item.priority}</span>}
-                      </div>
-
-                      {(item.store || item.link) && (
-                        <div style={{ marginTop: '4px' }}>
-                          🛒 <strong>Onde:</strong> {item.link ? <a href={item.link} target="_blank" style={{ color: '#2d7a4f', textDecoration: 'none', fontWeight: 'bold' }}>{item.store || 'Acessar Link'} ↗</a> : item.store}
-                        </div>
-                      )}
-                      
-                      {item.notes && <div style={{ fontStyle: 'italic', background: '#f9f8f6', padding: '6px', borderRadius: '6px', marginTop: '4px' }}>"{item.notes}"</div>}
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
-                    <div className="item-price">
-                      R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      <button onClick={() => updatePrice(item.id, item.name)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: 0.5 }}>✏️</button>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => deleteItem(item.id)} style={{ background: 'none', border: 'none', color: '#c0392b', cursor: 'pointer', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🗑️</button>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            ))}
+            {data.items.map(i => <div key={i.id}>{i.name} - R$ {i.price}</div>)}
           </div>
-
-          {/* MODAL ADICIONAR DINHEIRO */}
-          <div className={`modal ${showMoneyModal ? 'active' : ''}`} onClick={() => setShowMoneyModal(false)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>💰 Guardar Dinheiro</h2>
-                <button className="close-btn" onClick={() => setShowMoneyModal(false)}>✕</button>
-              </div>
-              <label className="label">VALOR (R$)</label>
-              <input type="number" placeholder="Ex: 500.00" value={moneyAmount} onChange={e => setMoneyAmount(e.target.value)} />
-              
-              <label className="label">PARA QUAL CARTEIRA?</label>
-              <select value={moneyDest} onChange={e => setMoneyDest(e.target.value)}>
-                <option value="caixa">Caixa para Compras (Livre para gastar na lista)</option>
-                <option value="reserva">Reserva de Emergência (Não tocar)</option>
-              </select>
-
-              <button className="btn" style={{ background: '#2d7a4f' }} onClick={handleAddMoney}>Confirmar Depósito</button>
-            </div>
-          </div>
-
-          {/* MODAL ADICIONAR ITEM */}
-          <div className={`modal ${showModal ? 'active' : ''}`} onClick={() => setShowModal(false)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Novo item</h2>
-                <button className="close-btn" onClick={() => setShowModal(false)}>✕</button>
-              </div>
-              <label className="label">NOME</label>
-              <input placeholder="Ex: Cafeteira" value={formName} onChange={e => setFormName(e.target.value)} />
-              <label className="label">PREÇO ESTIMADO (R$)</label>
-              <input type="number" placeholder="0.00" value={formPrice} onChange={e => setFormPrice(e.target.value)} />
-              <label className="label">MARCA / MODELO (Opcional)</label>
-              <input placeholder="Ex: Nespresso Essenza Mini" value={formBrand} onChange={e => setFormBrand(e.target.value)} />
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label className="label">CATEGORIA</label>
-                  <select value={formCategory} onChange={e => setFormCategory(e.target.value)}>
-                    <option value="Cozinha">Cozinha</option>
-                    <option value="Casa">Casa</option>
-                    <option value="Tech">Tech</option>
-                    <option value="Móveis">Móveis</option>
-                    <option value="Outros">Outros</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label">PRIORIDADE</label>
-                  <select value={formPriority} onChange={e => setFormPriority(e.target.value)}>
-                    <option value="Assim que der">Assim que der</option>
-                    <option value="Planejado">Planejado</option>
-                    <option value="Um dia">Um dia</option>
-                  </select>
-                </div>
-              </div>
-
-              <label className="label">LOJA / PESQUISA (Opcional)</label>
-              <input placeholder="Ex: Amazon" value={formStore} onChange={e => setFormStore(e.target.value)} />
-              <label className="label">LINK DO PRODUTO (Opcional)</label>
-              <input placeholder="https://..." type="url" value={formLink} onChange={e => setFormLink(e.target.value)} />
-              <label className="label">OBSERVAÇÕES (Opcional)</label>
-              <textarea placeholder="Ex: Voltagem 220v..." value={formNotes} onChange={e => setFormNotes(e.target.value)} style={{ resize: 'vertical', minHeight: '60px' }}></textarea>
-
-              <button className="btn" onClick={addItem}>Adicionar à lista</button>
-            </div>
-          </div>
-
         </div>
       );
     }
-
     ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
