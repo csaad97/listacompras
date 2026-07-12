@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Lista de Compras</title>
+  <title>Lista de Compras Sync</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -45,33 +45,44 @@
         }
       }, [code]);
 
-      const create = () => {
-        const newCode = Math.random().toString(36).slice(2,8).toUpperCase();
-        db.collection("listas").doc(newCode).set({ items: [], caixa: 0, reserva: 0 });
-        localStorage.setItem('roomCode', newCode);
-        setCode(newCode);
+      const addMoney = (type) => {
+        const val = prompt("Quanto adicionar?");
+        if (val) {
+          const amount = parseFloat(val);
+          const update = {};
+          update[type] = (data[type] || 0) + amount;
+          db.collection("listas").doc(code).update(update);
+        }
       };
 
-      if (!code) {
-        return (
-          <div className="container">
-            <button className="btn" onClick={create}>Criar Lista Sincronizada</button>
-          </div>
-        );
-      }
+      const addItem = () => {
+        const name = prompt("Nome do item:");
+        if (name) {
+          db.collection("listas").doc(code).update({
+            items: firebase.firestore.FieldValue.arrayUnion({ id: Date.now(), name })
+          });
+        }
+      };
 
       return (
         <div className="container">
           <div className="card">
-            <h2>Código: {code}</h2>
-            <p>Caixa: R$ {data.caixa ? data.caixa.toFixed(2) : "0.00"}</p>
-            <p>Reserva: R$ {data.reserva ? data.reserva.toFixed(2) : "0.00"}</p>
+            <h2>Lista: {code}</h2>
+            <p><strong>Caixa:</strong> R$ {data.caixa?.toFixed(2)}</p>
+            <p><strong>Reserva:</strong> R$ {data.reserva?.toFixed(2)}</p>
+            <button className="btn" onClick={() => addMoney('caixa')}>+ Adicionar ao Caixa</button>
+            <button className="btn" style={{background: '#2d7a4f'}} onClick={() => addMoney('reserva')}>+ Adicionar à Reserva</button>
           </div>
+          
+          <button className="btn" style={{background: '#555'}} onClick={addItem}>+ Novo Item</button>
+          
+          {data.items.map((i) => (
+            <div key={i.id} className="card">{i.name}</div>
+          ))}
         </div>
       );
     }
 
-    // Usando o método clássico de renderização que é mais estável
     ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
